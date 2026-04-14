@@ -25,6 +25,9 @@ venv/
 .env.*
 .venv/
 
+# Allow example env file
+!.env.example
+
 # =========================
 # Django
 # =========================

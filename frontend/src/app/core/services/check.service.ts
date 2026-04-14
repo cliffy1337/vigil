@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface CheckResult {
   id: string;
@@ -12,6 +13,13 @@ export interface CheckResult {
   checked_at: string;
 }
 
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class CheckService {
   private http = inject(HttpClient);
@@ -19,6 +27,8 @@ export class CheckService {
 
   list(endpointId?: string): Observable<CheckResult[]> {
     const params = endpointId ? `?endpoint=${endpointId}` : '';
-    return this.http.get<CheckResult[]>(`${this.apiUrl}${params}`);
+    return this.http.get<PaginatedResponse<CheckResult>>(`${this.apiUrl}${params}`).pipe(
+      map(r => r.results)
+    );
   }
 }

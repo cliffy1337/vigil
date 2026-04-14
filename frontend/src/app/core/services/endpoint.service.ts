@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface Endpoint {
   id: string;
@@ -13,13 +14,22 @@ export interface Endpoint {
   updated_at: string;
 }
 
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class EndpointService {
   private http = inject(HttpClient);
   private apiUrl = '/api/v1/endpoints/';
 
   list(): Observable<Endpoint[]> {
-    return this.http.get<Endpoint[]>(this.apiUrl);
+    return this.http.get<PaginatedResponse<Endpoint>>(this.apiUrl).pipe(
+      map(r => r.results)
+    );
   }
 
   create(data: Partial<Endpoint>): Observable<Endpoint> {

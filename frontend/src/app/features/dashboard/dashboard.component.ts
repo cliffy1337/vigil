@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, Inject } from '@angular/core';
+import { Component, OnInit, inject, Inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -31,32 +31,29 @@ Chart.register(...registerables);
         <button mat-raised-button color="primary" (click)="openEndpointForm()">+ Add Endpoint</button>
       </div>
 
-      <!-- Summary Cards -->
       <div class="summary">
         <mat-card>
           <mat-card-title>Total Endpoints</mat-card-title>
-          <div class="big-number">{{ endpoints.length }}</div>
+          <div class="big-number">{{ endpoints().length }}</div>
         </mat-card>
         <mat-card>
           <mat-card-title>Up Now</mat-card-title>
-          <div class="big-number">{{ upCount }}</div>
+          <div class="big-number">{{ upCount() }}</div>
         </mat-card>
         <mat-card>
           <mat-card-title>Down Now</mat-card-title>
-          <div class="big-number">{{ downCount }}</div>
+          <div class="big-number">{{ downCount() }}</div>
         </mat-card>
       </div>
 
-      <!-- Response Time Chart -->
       <mat-card>
         <mat-card-title>Response Time (last 20 checks)</mat-card-title>
         <canvas id="responseChart"></canvas>
       </mat-card>
 
-      <!-- Endpoints Table -->
       <mat-card>
         <mat-card-title>Endpoints</mat-card-title>
-        <table mat-table [dataSource]="endpoints" class="mat-elevation-z0">
+        <table mat-table [dataSource]="endpoints()" class="mat-elevation-z0">
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef> Name </th>
             <td mat-cell *matCellDef="let e"> {{e.name}} </td>
@@ -102,16 +99,27 @@ Chart.register(...registerables);
 export class DashboardComponent implements OnInit {
   private endpointService = inject(EndpointService);
   private checkService = inject(CheckService);
-  private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
-  endpoints: Endpoint[] = [];
-  checks: CheckResult[] = [];
+  endpoints = signal<Endpoint[]>([]);
+  checks = signal<CheckResult[]>([]);
   displayedColumns = ['name', 'url', 'status', 'actions'];
-  upCount = 0;
-  downCount = 0;
   chart: Chart | null = null;
+
+  upCount = computed(() => {
+    return this.endpoints().filter(e => this.getLastStatus(e)?.is_up).length;
+  });
+
+  downCount = computed(() => {
+    return this.endpoints().length - this.upCount();
+  });
+
+  constructor() {
+    effect(() => {
+      this.updateChart();
+    });
+  }
 
   ngOnInit() {
     this.loadData();
@@ -120,7 +128,7 @@ export class DashboardComponent implements OnInit {
   loadData() {
     this.endpointService.list().subscribe({
       next: (endpoints) => {
-        this.endpoints = endpoints;
+        this.endpoints.set(endpoints);
         this.loadChecks();
       },
       error: () => this.snackBar.open('Failed to load endpoints', 'Close', { duration: 3000 })
@@ -130,29 +138,21 @@ export class DashboardComponent implements OnInit {
   loadChecks() {
     this.checkService.list().subscribe({
       next: (checks) => {
-        this.checks = checks;
-        this.updateStats();
-        this.updateChart();
+        this.checks.set(checks);
       },
       error: () => this.snackBar.open('Failed to load checks', 'Close', { duration: 3000 })
     });
   }
 
-  updateStats() {
-    const lastChecks = this.endpoints.map(e => this.getLastStatus(e));
-    this.upCount = lastChecks.filter(c => c?.is_up).length;
-    this.downCount = this.endpoints.length - this.upCount;
-  }
-
   getLastStatus(endpoint: Endpoint): CheckResult | undefined {
-    return this.checks.find(c => c.endpoint === endpoint.id);
+    return this.checks().find(c => c.endpoint === endpoint.id);
   }
 
   updateChart() {
-    const latestChecks = this.checks.slice(0, 20).reverse();
+    const latestChecks = this.checks().slice(0, 20).reverse();
     const ctx = document.getElementById('responseChart') as HTMLCanvasElement;
     if (this.chart) this.chart.destroy();
-    if (ctx) {
+    if (ctx && latestChecks.length > 0) {
       this.chart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -172,8 +172,39 @@ export class DashboardComponent implements OnInit {
     const dialogRef = this.dialog.open(EndpointFormDialog, {
       data: endpoint || { name: '', url: '', interval_minutes: 5, is_active: true }
     });
+
     dialogRef.afterClosed().subscribe(result => {
-      if (result) this.loadData();
+      if (result) {
+        // Fix: Ensure URL has protocol and interval is a number
+        let finalUrl = result.url.trim();
+        if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+          finalUrl = 'https://' + finalUrl;
+        }
+
+        const payload = {
+          ...result,
+          url: finalUrl,
+          interval_minutes: Number(result.interval_minutes)
+        };
+
+        if (endpoint?.id) {
+          this.endpointService.update(endpoint.id, payload).subscribe({
+            next: () => {
+              this.snackBar.open('Endpoint updated', 'Close', { duration: 2000 });
+              this.loadData();
+            },
+            error: () => this.snackBar.open('Update failed', 'Close', { duration: 3000 })
+          });
+        } else {
+          this.endpointService.create(payload).subscribe({
+            next: () => {
+              this.snackBar.open('Endpoint created', 'Close', { duration: 2000 });
+              this.loadData();
+            },
+            error: () => this.snackBar.open('Creation failed', 'Close', { duration: 3000 })
+          });
+        }
+      }
     });
   }
 
@@ -197,14 +228,13 @@ export class DashboardComponent implements OnInit {
   }
 }
 
-// Dialog component
 @Component({
   selector: 'endpoint-form-dialog',
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,          // <-- ADD THIS
+    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
@@ -220,7 +250,11 @@ export class DashboardComponent implements OnInit {
         </mat-form-field>
         <mat-form-field fullWidth>
           <mat-label>URL</mat-label>
-          <input matInput formControlName="url" required>
+          <input matInput formControlName="url" placeholder="https://example.com" required>
+          <mat-hint>Must include http:// or https://</mat-hint>
+          <mat-error *ngIf="form.get('url')?.hasError('pattern')">
+            Please enter a valid URL (e.g., https://google.com)
+          </mat-error>
         </mat-form-field>
         <mat-form-field fullWidth>
           <mat-label>Interval (minutes)</mat-label>
@@ -240,7 +274,7 @@ export class DashboardComponent implements OnInit {
   `]
 })
 export class EndpointFormDialog {
-  form: ReturnType<FormBuilder['group']>;
+  form: FormGroup;
 
   constructor(
     private fb: FormBuilder,
@@ -248,10 +282,11 @@ export class EndpointFormDialog {
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.form = this.fb.group({
-      name: [data.name || '', Validators.required],
-      url: [data.url || '', Validators.required],
-      interval_minutes: [data.interval_minutes || 5, [Validators.required, Validators.min(1)]],
-      is_active: [data.is_active !== undefined ? data.is_active : true]
+      name: [data?.name || '', Validators.required],
+      // Regex pattern to enforce protocol requirement
+      url: [data?.url || '', [Validators.required, Validators.pattern('^https?://.+')]],
+      interval_minutes: [data?.interval_minutes || 5, [Validators.required, Validators.min(1)]],
+      is_active: [data?.is_active !== undefined ? data.is_active : true]
     });
   }
 
