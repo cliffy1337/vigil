@@ -1,10 +1,15 @@
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect
 from rest_framework.authtoken.views import obtain_auth_token
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+def root(request):
+    return redirect('/api/docs/')
+
 urlpatterns = [
+    path('', root),
     path('admin_portal/', admin.site.urls),
     path('api/auth/', include('apps.accounts.urls')),
     path('api/auth/token/', obtain_auth_token, name='api_token_auth'),

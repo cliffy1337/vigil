@@ -17,7 +17,15 @@ class CheckResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = CheckResult
         fields = ['id', 'endpoint', 'endpoint_name', 'status_code', 'response_time_ms', 'is_up', 'checked_at']
-        read_only_fields = '__all__'
+        read_only_fields = [
+            'id',
+            'endpoint',
+            'endpoint_name',
+            'status_code',
+            'response_time_ms',
+            'is_up',
+            'checked_at',
+        ]
 
 class IncidentSerializer(serializers.ModelSerializer):
     endpoint_name = serializers.CharField(source='endpoint.name', read_only=True)
@@ -26,4 +34,13 @@ class IncidentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Incident
         fields = ['id', 'endpoint', 'endpoint_name', 'started_at', 'ended_at', 'resolved', 'duration_seconds', 'created_at']
-        read_only_fields = '__all__'
+        read_only_fields = [
+            'id',
+            'endpoint',
+            'endpoint_name',
+            'started_at',
+            'ended_at',
+            'resolved',
+            'duration_seconds',
+            'created_at',
+        ]
