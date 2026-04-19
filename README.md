@@ -1,6 +1,6 @@
-# 🚨 Vigil – Production‑ready Uptime Monitor
+# 🚨 Vigil – Full-stack Uptime Monitoring System
 
-[![Status](https://img.shields.io/badge/status-in%20development-orange)](#)
+[![Status](https://img.shields.io/badge/status-production%20architecture%20demo-blue)](#)
 
 [![Django](https://img.shields.io/badge/Django-6.0-092E20?logo=django)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/DRF-3.15-a30000?logo=django)](https://www.django-rest-framework.org/)
