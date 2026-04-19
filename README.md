@@ -1,5 +1,7 @@
 # 🚨 Vigil – Production‑ready Uptime Monitor
 
+[![Status](https://img.shields.io/badge/status-in%20development-orange)](#)
+
 [![Django](https://img.shields.io/badge/Django-6.0-092E20?logo=django)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/DRF-3.15-a30000?logo=django)](https://www.django-rest-framework.org/)
 [![Celery](https://img.shields.io/badge/Celery-5.3-37814A?logo=celery)](https://docs.celeryq.dev/)
