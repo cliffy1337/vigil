@@ -1,0 +1,79 @@
+# =========================
+# OS / System
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# =========================
+# Django
+# =========================
+*.log
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
+
+# =========================
+# Celery
+# =========================
+celerybeat-schedule
+celerybeat.pid
+
+# =========================
+# Testing / Coverage
+# =========================
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# =========================
+# Node / Angular
+# =========================
+node_modules/
+dist/
+.angular/
+.cache/
+
+# =========================
+# Build / Packaging
+# =========================
+*.egg-info/
+.eggs/
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+*.env.docker
+
+# =========================
+# Misc
+# =========================
+*.bak
+*.tmp
+*.temp
