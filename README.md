@@ -14,6 +14,10 @@
 
 ---
 
+## 📸 Overview
+
+![Dashboard](docs/screenshots/dashboard.png)
+
 ## ✨ Features
 
 - 🔍 **Scheduled checks** – Celery Beat runs every 5 minutes, each endpoint check is an independent Celery task.
@@ -90,13 +94,14 @@ Services:
 
 ## 📸 Screenshots
 
-*Dashboard – endpoints, status, response time chart*  
-![Dashboard](docs/screenshot-dashboard.png)
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
 
-*Add / Edit endpoint dialog*  
-![Endpoint form](docs/screenshot-form.png)
+### Endpoint Management
+![Endpoints](docs/screenshots/endpoints.png)
 
-*(Placeholder – replace with actual screenshots after deployment)*
+### Create Endpoint
+![Create Endpoint](docs/screenshots/capture_endpoint.png)
 
 ---
 
