@@ -1,6 +1,6 @@
 # 🚨 Vigil – Full-stack Uptime Monitoring System
 
-[![Status](https://img.shields.io/badge/status-production%20architecture%20demo-blue)](#)
+[![Status](https://img.shields.io/badge/Status-In%20Development-yellow)](#)
 
 [![Django](https://img.shields.io/badge/Django-6.0-092E20?logo=django)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/DRF-3.15-a30000?logo=django)](https://www.django-rest-framework.org/)
